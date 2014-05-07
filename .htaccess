@@ -3,5 +3,6 @@
 	#uncomment next line if silex app root is in a mamp subdirectory
 	#RewriteBase /your_mamp_htdocs_silex_app_root
 	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteRule ^ web/index.php [L]
 </IfModule>

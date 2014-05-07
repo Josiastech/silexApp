@@ -1,29 +1,42 @@
 <?php
-require_once __DIR__.'/../vendor/autoload.php';
 
+error_reporting(E_ALL);
+
+use Symfony\Component\ClassLoader\DebugClassLoader;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\BaseHttpException;
 use Symfony\Component\HttpKernel\NotFoundHttpException;
-use Silex\Provider\FormServiceProvider;
-use Silex\Provider\TwigServiceProvider;
-use Silex\Provider\DoctrineServiceProvider;
+
+
+if(isset($_SERVER['HTTP_CLIENT_IP']) || isset($_SEVER['HTTP_X_FOWARDED_FOR']) || in_array(@$_SEVER['REMOTE_ADDR'], array(
+    '127.0.0.1',
+    '::1'
+    ))
+){
+    header('HTTP/1.0 403 Forbidden');
+    exit('You are not allowed to acces this file. Check'.basename(__FILE__).' for')
+}
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+use Silex\Application;
+
+
+
 use Silex\Extension\UrlGeneratorExtension;
 use Silex\Extension\TwigExtension;
 use Silex\Extension\SymfonyBridgesExtension;
 
-$app = new Silex\Application();
+
+$app = new Application();
 
 // Debug Mode = TRUE (dev)
 $app['debug'] = true;
 
-$app->register(new FormServiceProvider());
-
-$app->register(new TwigServiceProvider(),[
-    'twig.path' => __DIR__.'/../view',
-]);
-
-
+$app->register(new UrlGeneratorExtension(), array());l
+$app->register(new SymfonyBridgesExtension(), array(
+    'symfony_briges.class_path'=> __DIR__.'/../vendor/symfony/src'
+));
 // Controllers Code
 
 $blogPosts = array(
@@ -41,13 +54,13 @@ $app->get('/blog', function() use ($blogPosts) {
         $output .= $post['title'];
         $output .= '<br />';
     }
-
+    
     return $output;
 });
 
 
 /**
- * Dynamic Routes for Blogs Posts
+ * Dynamic Routes for Blogs Postsl
  * Passing {id} value as an argument  to the closure
  * abort() Method is used if requested post doesn't exist
  */
@@ -62,33 +75,8 @@ $app->get('/blog/show/{id}', function (Silex\Application $app, $id) use ($blogPo
             "<p>{$post['body']}</p>";
 });
 
-
-
-/**
- * User login
- */
-$app->register(new Silex\Provider\DoctrineServiceProvider(), array(
-    'db.options' => array(
-        'driver' => 'pdo_mysql',
-        'dbhost' => 'localhost',
-        'dbname' => 'mydbname',
-        'user' => 'root',
-        'password' => '',
-    ),
-));
-
-/*$app->register(new Silex\Provider\SessionServiceProvider());*/
-
-
-
-$app->get('/', function(Silex\Application $app){
-	$twigvars = array();
-
-    $twigvars['title'] = "Silex App";
-
-    $twigvars['content'] = "Lorem  ipsum    ";
-
-    return $app['twig']->render('index.html.twig', $twigvars);
+$app->get('/', function(){
+	return 'Index';
 });
 $app->get('/hello', function() {
     return 'Hello!';
